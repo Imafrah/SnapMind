@@ -64,7 +64,7 @@ Designed with a **minimal, glassmorphic UI**, SnapMind feels fast, elegant, and 
 
 - **Node.js** v18 or higher  
 - **Gemini API Key**  
-  👉 https://aistudio.google.com/app/apikey
+  👉 https://aistudio.google.com/app/apikey  
 
 ---
 
@@ -74,54 +74,3 @@ Designed with a **minimal, glassmorphic UI**, SnapMind feels fast, elegant, and 
    ```bash
    git clone <repository-url>
    cd ImAI
-Install dependencies
-
-npm install
-Configure environment variables
-
-Create a .env.local file in the root directory:
-
-GEMINI_API_KEY=your_api_key_here
-Run the development server
-
-npm run dev
-🧩 Browser Extension Setup
-To use SnapMind as a browser extension (Chrome, Edge, Brave):
-
-Build the production package
-
-npm run build
-Open Browser Extensions Page
-
-Chrome: chrome://extensions/
-
-Edge: edge://extensions/
-
-Enable Developer Mode
-
-Load the extension
-
-Click Load unpacked
-
-Select the dist folder
-
-🏪 Microsoft Edge Store Publication
-SnapMind is optimized for the Microsoft Edge Add-ons Store.
-
-Steps to Publish
-Zip only the contents of the dist folder
-
-Go to Microsoft Partner Center
-👉 https://partner.microsoft.com/en-us/dashboard/microsoftedge/public/login
-
-Upload the ZIP and complete the store listing
-
-📄 License
-This project is licensed under the MIT License.
-See the LICENSE file for details.
-
-<div align="center">
-Built with ❤️ for the AI community
-SnapMind — Think Beyond the Screen
-
-</div> ```
