@@ -1,0 +1,8 @@
+{
+  "name": "SnapMind",
+  "description": "A premium, Apple-style Chrome extension simulation that captures screenshots and answers questions using Gemini AI.",
+  "requestFramePermissions": [
+    "camera",
+    "display-capture"
+  ]
+}
