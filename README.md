@@ -16,7 +16,7 @@ Whether you’re:
 - Translating text from images  
 - Summarizing complex content  
 
-SnapMind delivers **clear, contextual answers directly inside your browser**.
+SnapMind delivers clear, contextual answers directly in your browser.
 
 Designed with a **minimal, glassmorphic UI**, SnapMind feels fast, elegant, and intuitive.
 
@@ -57,6 +57,13 @@ Designed with a **minimal, glassmorphic UI**, SnapMind feels fast, elegant, and 
 | Extension Standard | Manifest V3 |
 
 ---
+
+## 📸 Demo
+
+![SnapMind Demo](<img width="1344" height="670" alt="image" src="https://github.com/user-attachments/assets/4b0ad4fb-df57-4afa-ab44-3604259f9b10" />)
+
+Real-time screen capture and AI-powered summarization using Google Gemini, delivered directly inside a browser sidebar.
+
 
 ## 📥 Installation
 
