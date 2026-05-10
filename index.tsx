@@ -10,21 +10,35 @@ import './index.css';
 if (typeof chrome !== 'undefined' && chrome.tabs) {
   // @ts-ignore
   navigator.mediaDevices.getDisplayMedia = async () => {
-    return new Promise((resolve) => {
-      chrome.tabs.captureVisibleTab(null as any, { format: 'png' }, async (dataUrl) => {
+    return new Promise((resolve, reject) => {
+      chrome.tabs.captureVisibleTab({ format: 'png' }, (dataUrl) => {
+        const lastError = chrome.runtime?.lastError;
+        if (lastError) {
+          reject(new Error(lastError.message));
+          return;
+        }
+
+        if (!dataUrl) {
+          reject(new Error("No screenshot data was returned."));
+          return;
+        }
+
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
           canvas.width = img.width;
           canvas.height = img.height;
           const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0);
-            // @ts-ignore
-            const stream = canvas.captureStream(30);
-            resolve(stream);
+          if (!ctx || !canvas.captureStream) {
+            reject(new Error("Unable to convert screenshot to a stream."));
+            return;
           }
+
+          ctx.drawImage(img, 0, 0);
+          const stream = canvas.captureStream(30);
+          resolve(stream);
         };
+        img.onerror = () => reject(new Error("Unable to load screenshot data."));
         img.src = dataUrl;
       });
     });

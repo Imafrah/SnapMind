@@ -1,6 +1,22 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 
+const parseImageData = (imageData: string) => {
+  const dataUrlMatch = imageData.match(/^data:([^;]+);base64,(.+)$/);
+
+  if (dataUrlMatch) {
+    return {
+      mimeType: dataUrlMatch[1],
+      data: dataUrlMatch[2],
+    };
+  }
+
+  return {
+    mimeType: 'image/png',
+    data: imageData,
+  };
+};
+
 export async function askGeminiAboutImage(base64Image: string, question: string): Promise<string> {
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
@@ -9,28 +25,33 @@ export async function askGeminiAboutImage(base64Image: string, question: string)
 
   const ai = new GoogleGenAI({ apiKey });
   
-  // Extract base64 clean data (remove mime type prefix)
-  const base64Data = base64Image.split(',')[1] || base64Image;
+  const imageData = parseImageData(base64Image);
 
   const imagePart = {
     inlineData: {
-      mimeType: 'image/png',
-      data: base64Data,
+      mimeType: imageData.mimeType,
+      data: imageData.data,
     },
   };
 
   const textPart = {
-    text: `You are an AI assistant analyzing a screenshot. 
-    
-    CRITICAL INSTRUCTIONS FOR RESPONSE FORMATTING:
-    - Respond in PLAIN TEXT ONLY.
-    - DO NOT use any markdown characters: No bold (**), no italics (*), no headers (#), no backticks (\`), no horizontal rules (---).
-    - DO NOT use bullet points with dashes (-) or asterisks (*). Use numbers (1., 2.) or simple indentation.
-    - DO NOT wrap the response in quotes.
-    - Use clear spacing and capital letters for section headings instead of bolding.
-    - Ensure the response is clean, human-readable, and free of any technical markers or markdown noise.
+    text: `You are an AI assistant analyzing a screenshot.
 
-    USER QUESTION: ${question}`
+FORMAT THE ANSWER IN A CLEAR STRUCTURE:
+1. Start with a short direct answer under the heading SUMMARY.
+2. Add DETAILS with the important observations, using numbered points.
+3. Add NEXT STEPS only when the user needs actions, fixes, or instructions.
+4. Keep each point short and practical.
+
+STRICT OUTPUT RULES:
+1. Use plain text only.
+2. Do not use markdown symbols such as **, #, backticks, or horizontal rules.
+3. Do not use dash bullets or star bullets. Use numbered points only.
+4. Do not wrap the response in quotes.
+5. Use uppercase section headings like SUMMARY, DETAILS, NEXT STEPS.
+6. If the screenshot does not contain enough information, say exactly what is missing.
+
+USER QUESTION: ${question}`
   };
 
   try {
@@ -47,6 +68,6 @@ export async function askGeminiAboutImage(base64Image: string, question: string)
     return response.text || "I was unable to analyze the image.";
   } catch (error: any) {
     console.error("Gemini API Error:", error);
-    return `Error: ${error.message || "Failed to get response from AI"}`;
+    throw new Error(error.message || "Failed to get response from AI");
   }
 }

@@ -8,6 +8,29 @@ import { InputArea } from './components/InputArea';
 import { AppState, AppStateData, ChatMessage } from './types';
 import { askGeminiAboutImage } from './services/geminiService';
 
+const wait = (milliseconds: number) => new Promise(resolve => setTimeout(resolve, milliseconds));
+
+const waitForVideoMetadata = (video: HTMLVideoElement) => {
+  return new Promise<void>((resolve, reject) => {
+    if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+      resolve();
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => reject(new Error("Capture timed out.")), 5000);
+
+    video.onloadedmetadata = () => {
+      window.clearTimeout(timeoutId);
+      resolve();
+    };
+
+    video.onerror = () => {
+      window.clearTimeout(timeoutId);
+      reject(new Error("Unable to load captured screen."));
+    };
+  });
+};
+
 const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [data, setData] = useState<AppStateData>({
@@ -72,44 +95,48 @@ const App: React.FC = () => {
 
   const handleCapture = async () => {
     setData(prev => ({ ...prev, status: AppState.LOADING_CAPTURE, error: null }));
+    let stream: MediaStream | null = null;
 
     try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({
+      if (!navigator.mediaDevices?.getDisplayMedia) {
+        throw new Error("Screen capture is not supported in this browser.");
+      }
+
+      stream = await navigator.mediaDevices.getDisplayMedia({
         video: { displaySurface: 'browser' },
         audio: false
       });
 
       const video = document.createElement('video');
       video.srcObject = stream;
-      video.play();
-
-      await new Promise((resolve) => {
-        video.onloadedmetadata = resolve;
-      });
+      video.muted = true;
+      video.playsInline = true;
+      const metadataReady = waitForVideoMetadata(video);
+      await video.play();
+      await metadataReady;
 
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
 
-      if (ctx) {
-        setTimeout(() => {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const imageData = canvas.toDataURL('image/png');
-
-          setData(prev => ({
-            ...prev,
-            status: AppState.READY,
-            screenshot: imageData,
-            history: []
-          }));
-
-          stream.getTracks().forEach(track => track.stop());
-        }, 300);
+      if (!ctx || !canvas.width || !canvas.height) {
+        throw new Error("Unable to read captured screen.");
       }
+
+      await wait(300);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/png');
+
+      setData(prev => ({
+        ...prev,
+        status: AppState.READY,
+        screenshot: imageData,
+        history: []
+      }));
     } catch (err: any) {
       console.warn("Capture failed:", err);
-      let errorMsg = "Permission denied.";
+      let errorMsg = err.message || "Permission denied.";
 
       if (err.name === 'NotAllowedError' || err.message?.includes('disallowed by permissions policy')) {
         errorMsg = "Browser policy blocks automatic capture. Please use 'Upload' or Paste (Cmd+V).";
@@ -120,6 +147,8 @@ const App: React.FC = () => {
         status: AppState.EMPTY,
         error: errorMsg
       }));
+    } finally {
+      stream?.getTracks().forEach(track => track.stop());
     }
   };
 
